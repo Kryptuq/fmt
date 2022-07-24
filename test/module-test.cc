@@ -15,8 +15,6 @@
 #  define FMT_HIDE_MODULE_BUGS
 #endif
 
-#define FMT_MODULE_TEST
-
 #include <bit>
 #include <chrono>
 #include <exception>
@@ -36,30 +34,19 @@
 #else
 #  define FMT_USE_FCNTL 0
 #endif
-#if defined(_WIN32) && !defined(__MINGW32__)
-#  define FMT_POSIX(call) _##call
-#else
-#  define FMT_POSIX(call) call
-#endif
-#define FMT_OS_H_  // don't pull in os.h directly or indirectly
+#define FMT_NOEXCEPT noexcept
 
 import fmt;
 
 // check for macros leaking from BMI
 static bool macro_leaked =
-#if defined(FMT_CORE_H_) || defined(FMT_FORMAT_H_)
+#if defined(FMT_CORE_H_) || defined(FMT_FORMAT_H)
     true;
 #else
     false;
 #endif
 
-// Include sources to pick up functions and classes from the module rather than
-// from the non-modular library which is baked into the 'test-main' library.
-// This averts linker problems:
-// - strong ownership model: missing linker symbols
-// - weak ownership model: duplicate linker symbols
-#include "gtest-extra.cc"
-#include "util.cc"
+#include "gtest-extra.h"
 
 // an implicitly exported namespace must be visible [module.interface]/2.2
 TEST(module_test, namespace) {
@@ -75,10 +62,8 @@ bool oops_detail_namespace_is_visible;
 namespace fmt {
 bool namespace_detail_invisible() {
 #if defined(FMT_HIDE_MODULE_BUGS) && defined(_MSC_FULL_VER) && \
-    ((_MSC_VER == 1929 && _MSC_FULL_VER <= 192930136) ||       \
-     (_MSC_VER == 1930 && _MSC_FULL_VER <= 193030704))
-  // bug in msvc up to 16.11.5 / 17.0-pre5:
-
+    _MSC_FULL_VER <= 192930129
+  // bug in msvc up to 16.11-pre1:
   // the namespace is visible even when it is neither
   // implicitly nor explicitly exported
   return true;
@@ -98,8 +83,8 @@ TEST(module_test, detail_namespace) {
 // macros must not be imported from a *named* module  [cpp.import]/5.1
 TEST(module_test, macros) {
 #if defined(FMT_HIDE_MODULE_BUGS) && defined(_MSC_FULL_VER) && \
-    _MSC_FULL_VER <= 192930130
-  // bug in msvc up to 16.11-pre2:
+    _MSC_FULL_VER <= 192930129
+  // bug in msvc up to 16.11-pre1:
   // include-guard macros leak from BMI
   // and even worse: they cannot be #undef-ined
   macro_leaked = false;
@@ -193,6 +178,13 @@ TEST(module_test, wformat_args) {
   EXPECT_FALSE(no_args.get(1));
   fmt::basic_format_args args = fmt::make_wformat_args(42);
   EXPECT_TRUE(args.get(0));
+}
+
+TEST(module_test, checked_format_args) {
+  fmt::basic_format_args args = fmt::make_args_checked<int>("{}", 42);
+  EXPECT_TRUE(args.get(0));
+  fmt::basic_format_args wargs = fmt::make_args_checked<int>(L"{}", 42);
+  EXPECT_TRUE(wargs.get(0));
 }
 
 TEST(module_test, dynamic_format_args) {
@@ -450,7 +442,8 @@ TEST(module_test, time_duration) {
 }
 
 TEST(module_test, weekday) {
-  EXPECT_EQ("Mon", fmt::format(std::locale::classic(), "{}", fmt::weekday(1)));
+  EXPECT_EQ("Monday",
+            std::format(std::locale::classic(), "{:%A}", fmt::weekday(1)));
 }
 
 TEST(module_test, to_string_view) {

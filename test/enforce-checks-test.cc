@@ -17,12 +17,12 @@
 
 // Exercise the API to verify that everything we expect to can compile.
 void test_format_api() {
-  (void)fmt::format(FMT_STRING("{}"), 42);
-  (void)fmt::format(FMT_STRING(L"{}"), 42);
-  (void)fmt::format(FMT_STRING("noop"));
+  fmt::format(FMT_STRING("{}"), 42);
+  fmt::format(FMT_STRING(L"{}"), 42);
+  fmt::format(FMT_STRING("noop"));
 
-  (void)fmt::to_string(42);
-  (void)fmt::to_wstring(42);
+  fmt::to_string(42);
+  fmt::to_wstring(42);
 
   std::vector<char> out;
   fmt::format_to(std::back_inserter(out), FMT_STRING("{}"), 42);
@@ -35,14 +35,13 @@ void test_format_api() {
 }
 
 void test_chrono() {
-  (void)fmt::format(FMT_STRING("{}"), std::chrono::seconds(42));
-  (void)fmt::format(FMT_STRING(L"{}"), std::chrono::seconds(42));
+  fmt::format(FMT_STRING("{}"), std::chrono::seconds(42));
+  fmt::format(FMT_STRING(L"{}"), std::chrono::seconds(42));
 }
 
 void test_text_style() {
   fmt::print(fg(fmt::rgb(255, 20, 30)), FMT_STRING("{}"), "rgb(255,20,30)");
-  (void)fmt::format(fg(fmt::rgb(255, 20, 30)), FMT_STRING("{}"),
-                    "rgb(255,20,30)");
+  fmt::format(fg(fmt::rgb(255, 20, 30)), FMT_STRING("{}"), "rgb(255,20,30)");
 
   fmt::text_style ts = fg(fmt::rgb(255, 20, 30));
   std::string out;
@@ -52,7 +51,7 @@ void test_text_style() {
 
 void test_range() {
   std::vector<char> hello = {'h', 'e', 'l', 'l', 'o'};
-  (void)fmt::format(FMT_STRING("{}"), hello);
+  fmt::format(FMT_STRING("{}"), hello);
 }
 
 int main() {
